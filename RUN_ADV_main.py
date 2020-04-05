@@ -43,21 +43,23 @@ if __name__ == '__main__':
     for i in range(EPOCH):
         pbar = tqdm.trange(50000 // batch_size + 1)
         for j in pbar:
-            gs, tmp_sum, _, tmp_loss, tmp_acc_C = sess.run(
-                [global_step, summary_op, train_OP, train_loss, train_clean_acc])
+            gs, tmp_sum, _, tmp_loss, tmp_acc_C, tmp_acc_A = sess.run(
+                [global_step, summary_op, train_OP, train_loss, train_clean_acc, train_adv_acc])
             pbar.set_description(
-                "loss:{:.2f}, clean_acc:{:.2f}".format(tmp_loss, tmp_acc_C))
+                "loss:{:.2f}, clean_acc:{:.2f}, adv_acc:{:.2f}".format(tmp_loss, tmp_acc_C, tmp_acc_A))
             train_writer.add_summary(tmp_sum, gs)
         if i % 1 == 0:
             gs = sess.run(global_step)
             saver.save(sess, save_path, global_step=gs)
-            val_L, val_A = 0, 0
+            val_L, val_A, val_ADV = 0, 0, 0
             for j in tqdm.trange(10000//eval_batch_size):
-                tmp_loss, tmp_acc = sess.run([val_loss, val_clean_acc])
+                tmp_loss, tmp_acc, tmp_adv = sess.run([val_loss, val_clean_acc, val_adv_acc])
                 val_L += tmp_loss
                 val_A += tmp_acc
+                val_ADV += tmp_adv
             summary = tf.Summary()
             summary.value.add(tag='val_acc', simple_value=val_A / (10000//eval_batch_size))
+            summary.value.add(tag='val_adv_acc', simple_value=val_ADV / (10000 // eval_batch_size))
             summary.value.add(tag='val_loss', simple_value=val_L / (10000//eval_batch_size))
             test_writer.add_summary(summary, i)
             print("########################")
