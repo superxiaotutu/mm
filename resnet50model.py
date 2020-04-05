@@ -232,7 +232,7 @@ class ResNetCifar10(ResNet):
                  is_training,
                  batch_norm_decay=0.997,
                  batch_norm_epsilon=1e-5,
-                 data_format='channels_first'):
+                 data_format='channels_last'):
         super(ResNetCifar10, self).__init__(
             is_training,
             data_format,
@@ -247,17 +247,6 @@ class ResNetCifar10(ResNet):
 
     def forward_pass(self, x, input_data_format='channels_last'):
         """Build the core model within the graph."""
-        if self._data_format != input_data_format:
-            if input_data_format == 'channels_last':
-                # Computation requires channels_first.
-                x = tf.transpose(x, [0, 3, 1, 2])
-            else:
-                # Computation requires channels_last.
-                x = tf.transpose(x, [0, 2, 3, 1])
-
-        # Image standardization.
-        x = x / 128 - 1
-
         x = self._conv(x, 3, 16, 1)
         x = self._batch_norm(x)
         x = self._relu(x)

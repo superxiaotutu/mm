@@ -1,5 +1,5 @@
 # config
-batch_size = 128
+batch_size = 256
 eval_batch_size = 100
 data_path = '/home/kirin/DATA/Cifar'
 work_path = "/home/kirin/PyCode/Cifar_WideResnet/"
@@ -7,7 +7,6 @@ work_name = "clean_cifar/"
 EPOCH = 50
 
 from model_base import *
-
 import tqdm
 
 if __name__ == '__main__':

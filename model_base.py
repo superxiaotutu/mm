@@ -12,7 +12,8 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 
 GPU_NUM = 4
 
-learningrate = 0.0001
+
+learningrate = 0.001
 global_step = tf.Variable(0, trainable=False)
 
 sess_config = tf.ConfigProto()
@@ -56,8 +57,8 @@ from resnet50model import *
 def forward_pass(x, dropout_keep_prob, is_train=False, only_logits=False):
     x = x / 128 - 1
     end_points = {}
-    model = ResNetCifar10(50, is_training=is_train)
     with tf.variable_scope(name_or_scope='resnet50', reuse=tf.AUTO_REUSE):
+        model = ResNetCifar10(50, is_training=is_train)
         global_pool = model.forward_pass(x)
         global_pool = tf.nn.dropout(global_pool, dropout_keep_prob)
         logits = model.fully_connected(global_pool, 10)
@@ -144,8 +145,9 @@ def model_fn(features, labels, is_training, open_adv_train=False):
         with tf.device('/cpu:0'):
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
-                optimizer = slim.train.AdamOptimizer(learning_rate=learningrate)
-                # Create single grouped train op
+                optimizer = tf.train.MomentumOptimizer(learning_rate=learningrate, momentum=0.9)
+            # optimizer = slim.train.AdamOptimizer(learning_rate=learningrate)
+            # Create single grouped train op
                 train_op = [optimizer.apply_gradients(gradvars, global_step=global_step)]
                 train_op = tf.group(*train_op)
     else:
