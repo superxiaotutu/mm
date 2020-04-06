@@ -67,7 +67,8 @@ def tower_fn(is_training, feature, label, open_adv_trainn=False):
         label = tf.concat([label, label], axis=0)
 
     tower_loss = tf.reduce_mean(tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=label))
-    tower_loss += tf.add_n(slim.losses.get_regularization_losses())
+    l2_var = tf.trainable_variables()
+    tower_loss += 2e-4 * tf.add_n([tf.nn.l2_loss(v) for v in l2_var])
     tower_loss += ALP_loss
 
     model_params = tf.trainable_variables()

@@ -52,9 +52,10 @@ def tower_fn(is_training, feature, label):
     tmp_clean_logits, tmp_adv_logits = tf.split(tmp_logits, 2)
     tmp_attention = tf.split(tf.reduce_max(tf.nn.softmax(tmp_logits) * onehot_label, axis=1), 2)
     tmp_attention = (tmp_attention[0] + tmp_attention[1]) / 2
+    l2_var = tf.trainable_variables()
     tmp_loss = tf.reduce_mean(tf.losses.sparse_softmax_cross_entropy(logits=tmp_logits, labels=total_label)) + \
                tf.reduce_mean(tf.reduce_mean(tf.square(tmp_clean_logits - tmp_adv_logits), axis=1) * tmp_attention) + \
-               tf.add_n(slim.losses.get_regularization_losses())
+               2e-4 * tf.add_n([tf.nn.l2_loss(v) for v in l2_var])
 
     clean_correct_p = tf.equal(tf.argmax(tmp_clean_logits, -1), tf.cast(label, tf.int64))
     clean_accuracy = tf.reduce_mean(tf.cast(clean_correct_p, "float"))
@@ -76,7 +77,7 @@ def tower_fn(is_training, feature, label):
     final_attention = (final_attention[0] + final_attention[1]) / 2
     final_loss = tf.reduce_mean(tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=total_label)) + \
                tf.reduce_mean(tf.reduce_mean(tf.square(clean_logits - adv_logits), axis=1) * final_attention) + \
-               tf.add_n(slim.losses.get_regularization_losses())
+               2e-4 * tf.add_n([tf.nn.l2_loss(v) for v in l2_var])
 
     tower_grad = tf.gradients(final_loss, model_params)
     return final_loss, zip(tower_grad, model_params), clean_accuracy, adv_accuracy
