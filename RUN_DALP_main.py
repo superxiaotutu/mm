@@ -18,7 +18,7 @@ from adversarial_attack import *
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 
-learningrate = 0.00001
+learningrate = 0.01
 global_step = tf.Variable(0, trainable=False)
 
 sess_config = tf.ConfigProto()
@@ -30,8 +30,8 @@ from wideresnet28model import *
 def forward_pass(x, attention_dropout=tf.ones([384]), is_train=False, only_logits=False):
     x = x / 128 - 1
     end_points = {}
-    with tf.variable_scope(name_or_scope='WR28', reuse=tf.AUTO_REUSE):
-        model = ResNetCifar10(10, is_training=is_train)
+    with tf.variable_scope(name_or_scope='resnet9', reuse=tf.AUTO_REUSE):
+        model = ResNetCifar10(is_training=is_train)
         global_pool = model.forward_pass(x)
         global_pool = global_pool * attention_dropout
         logits = model.fully_connected(global_pool, 10)
@@ -121,10 +121,11 @@ def model_fn(features, labels, is_training):
                         avg_grad = tf.multiply(tf.add_n(grads), 1. / len(grads))
                 gradvars.append((avg_grad, var))
         with tf.device('/cpu:0'):
-            optimizer = slim.train.AdamOptimizer(learning_rate=learningrate)
-            # Create single grouped train op
-            train_op = [optimizer.apply_gradients(gradvars, global_step=global_step)]
-            train_op = tf.group(*train_op)
+            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            with tf.control_dependencies(update_ops):
+                optimizer = tf.train.MomentumOptimizer(learning_rate=learningrate, momentum=0.9)
+                train_op = [optimizer.apply_gradients(gradvars, global_step=global_step)]
+                train_op = tf.group(*train_op)
     else:
         train_op = 0
 

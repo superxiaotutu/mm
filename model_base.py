@@ -22,8 +22,8 @@ from wideresnet28model import *
 def forward_pass(x, dropout_keep_prob, is_train=False, only_logits=False):
     x = x / 128 - 1
     end_points = {}
-    with tf.variable_scope(name_or_scope='WR28', reuse=tf.AUTO_REUSE):
-        model = ResNetCifar10(10, is_training=is_train)
+    with tf.variable_scope(name_or_scope='resnet9', reuse=tf.AUTO_REUSE):
+        model = ResNetCifar10(is_training=is_train)
         global_pool = model.forward_pass(x)
         global_pool = tf.nn.dropout(global_pool, dropout_keep_prob)
         logits = model.fully_connected(global_pool, 10)

@@ -31,10 +31,7 @@ if __name__ == '__main__':
 
     sess.run(tf.global_variables_initializer())
 
-    all_var = tf.global_variables()
-    restore_vars = [var for var in all_var if 'Adam' not in var.name and var.name.startswith('cifarnet/')]
-
-    saver = tf.train.Saver(restore_vars)
+    saver = tf.train.Saver()
 
     ckpt = tf.train.get_checkpoint_state(work_path + work_name)
     if ckpt:
