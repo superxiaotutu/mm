@@ -293,6 +293,7 @@ class ResNetCifar10(ResNet):
                         # Following blocks in a stage, constant filters and unit stride.
                         x = res_func(x, 3, self.filters[i + 1], self.filters[i + 1], 1)
 
-        global_avg_pool = self._global_avg_pool(x)
+        # global_avg_pool = self._global_avg_pool(x)
         # x = self._fully_connected(x, self.num_classes)
+        global_avg_pool = tf.layers.flatten(x)
         return global_avg_pool
