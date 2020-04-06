@@ -1,7 +1,7 @@
 batch_size = 1024
-data_path = '/home/kirin/DATA/Cifar'
-work_path = "/home/kirin/PyCode/Cifar_WideResnet/"
-work_name = "clean_cifar/"
+data_path = '/home/kirin/DATA/SVHN_data'
+work_path = "/home/kirin/PyCode/SVHN_cifarnet/"
+work_name = "adv_svhn/"
 
 
 from model_base import *
@@ -16,9 +16,12 @@ if __name__ == '__main__':
     sess.run(tf.global_variables_initializer())
 
     saver = tf.train.Saver()
-    save_path = "/home/kirin/PyCode/Cifar_WideResnet/clean_cifar/cifar.ckpt"
+    save_path = "/home/kirin/PyCode/SVHN_cifarnet/adv_svhn/svhn.ckpt-23040"
 
-    saver.restore(sess, save_path)
+    ckpt = tf.train.get_checkpoint_state(work_path + work_name)
+    if ckpt:
+        saver.restore(sess, ckpt.model_checkpoint_path)
+    # saver.restore(sess, save_path)
 
     val_L, val_A, adv_A = 0, 0, 0
     for j in tqdm.trange(26000 // 1000):

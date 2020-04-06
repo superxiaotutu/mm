@@ -25,7 +25,7 @@ WIDTH = 32
 DEPTH = 3
 
 
-class CifarDataSet(object):
+class SVHNDataSet(object):
 
   def __init__(self, data_dir, subset='train', use_distortion=True):
     self.data_dir = data_dir
@@ -74,7 +74,7 @@ class CifarDataSet(object):
     # Potentially shuffle records.
     if self.subset == 'train':
       min_queue_examples = int(
-          CifarDataSet.num_examples_per_epoch(self.subset) * 0.4)
+          SVHNDataSet.num_examples_per_epoch(self.subset) * 0.4)
       # Ensure that the capacity is sufficiently large to provide good random
       # shuffling.
       dataset = dataset.shuffle(buffer_size=min_queue_examples + 3 * batch_size)
@@ -91,8 +91,7 @@ class CifarDataSet(object):
     """Preprocess a single image in [height, width, depth] layout."""
     if self.subset == 'train' and self.use_distortion:
     #   # Pad 4 pixels on each dimension of feature map, done in mini-batch
-      image = tf.image.random_flip_left_right(image)
-      image = tf.image.resize_image_with_crop_or_pad(image, 40, 40)
+      image = tf.image.resize_image_with_crop_or_pad(image, 36, 36)
       image = tf.random_crop(image, [32, 32, DEPTH])
       image = tf.image.random_brightness(image, max_delta=16. / 255.)
       # image = tf.image.random_saturation(image, lower=0.4, upper=1.2)
@@ -103,9 +102,9 @@ class CifarDataSet(object):
   @staticmethod
   def num_examples_per_epoch(subset='train'):
     if subset == 'train':
-      return 50000
+      return 73257
     elif subset == 'eval':
       # return 26032
-      return 10000
+      return 26000
     else:
       raise ValueError('Invalid data subset "%s"' % subset)

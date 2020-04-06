@@ -153,6 +153,35 @@ class ResNet(object):
             tf.logging.info('image after unit %s: %s', name_scope, x.get_shape())
             return x
 
+    def _wide_residual(self,
+                     x,
+                     in_filter,
+                     out_filter,
+                     stride,
+                     activate_before_residual=False):
+        """Residual unit with 2 sub layers with preactivation, plan A shortcut."""
+
+        del activate_before_residual
+        with tf.name_scope('wide_residual') as name_scope:
+            orig_x = x
+
+            x = self._conv(x, 3, out_filter, stride)
+            x = self._batch_norm(x)
+            x = self._relu(x)
+
+            x = tf.layers.dropout(x, rate=0.3, training=self._is_training)
+
+            x = self._conv(x, 3, out_filter, 1)
+            x = self._batch_norm(x)
+
+            if in_filter != out_filter:
+                orig_x = self._conv(orig_x, 1, out_filter, stride, is_atrous=True)
+
+            x = self._relu(tf.add(x, orig_x))
+
+            tf.logging.info('image after unit %s: %s', name_scope, x.get_shape())
+            return x
+
     def _conv(self, x, kernel_size, filters, strides, is_atrous=False):
         """Convolution."""
 
@@ -228,7 +257,6 @@ class ResNetCifar10(ResNet):
     """Cifar10 model with ResNetV1 and basic residual block."""
 
     def __init__(self,
-                 num_layers,
                  is_training,
                  batch_norm_decay=0.997,
                  batch_norm_epsilon=1e-5,
@@ -239,7 +267,7 @@ class ResNetCifar10(ResNet):
             batch_norm_decay,
             batch_norm_epsilon
         )
-        self.n = (num_layers - 2) // 6
+        self.n = 1
         # Add one in case label starts with 1. No impact if label starts with 0.
         # self.num_classes = 10 + 1
         self.filters = [16, 16, 32, 64]
@@ -260,8 +288,7 @@ class ResNetCifar10(ResNet):
                 for j in range(self.n):
                     if j == 0:
                         # First block in a stage, filters and strides may change.
-                        x = res_func(x, 3, self.filters[i], self.filters[i + 1],
-                                     self.strides[i])
+                        x = res_func(x, 3, self.filters[i], self.filters[i + 1], self.strides[i])
                     else:
                         # Following blocks in a stage, constant filters and unit stride.
                         x = res_func(x, 3, self.filters[i + 1], self.filters[i + 1], 1)
