@@ -18,6 +18,7 @@ from adversarial_attack import *
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 
+GPU_NUM = 4
 learningrate = 0.01
 global_step = tf.Variable(0, trainable=False)
 
@@ -92,13 +93,13 @@ def input_fn(data_dir, subset, batch_size):
 
 
 def model_fn(features, labels, is_training):
-    tower_features = tf.split(features, 4)
-    tower_labels = tf.split(labels, 4)
+    tower_features = tf.split(features, GPU_NUM)
+    tower_labels = tf.split(labels, GPU_NUM)
     tower_losses = []
     tower_gradvars = []
     tower_clean_acc = []
     tower_adv_acc = []
-    for i in range(4):
+    for i in range(GPU_NUM):
         worker_device = '/{}:{}'.format("GPU", i)
         with tf.device(worker_device):
             loss, gradvars, clean_AC, adv_AC = tower_fn(is_training, tower_features[i], tower_labels[i])
